@@ -1,0 +1,34 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+#app{
+    background-color: rgb(44, 41, 41);
+    padding: 1rem;
+    --size:40px;
+    --side:5;
+    font-size: 1rem;
+}
+
+.grid
+{
+    border: 1px solid gray;
+    display: grid;
+    grid-template-columns: repeat(var(--side),var(--size));
+    grid-template-rows: repeat(var(--side),var(--size));
+    width: fit-content;
+}
+
+.cell
+{
+    height: var(--size);
+    border: 1px solid black;
+    background-color: silver;
+    display: grid;
+    place-content: center;
+}
+.cell:hover{
+    cursor: pointer;
+}

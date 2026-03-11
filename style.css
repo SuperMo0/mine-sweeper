@@ -85,4 +85,8 @@ body{
 }
 .cell:hover{
     cursor: pointer;
+    background-color: #3a7996bb;
+}
+.cell.revealed{
+    background-color: #1D546D;  
 }

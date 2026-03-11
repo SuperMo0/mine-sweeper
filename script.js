@@ -3,7 +3,7 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function initilizeGrid(width, height) {
+function initializeGrid(width, height) {
     return new Array(width).fill(null).map(el => new Array(height).fill(null));
 }
 class Cell {
@@ -31,7 +31,7 @@ class Cell {
 class Grid {
     constructor(sideLength) {
         this.sideLength = sideLength || 10;
-        this.cellsTable = initilizeGrid(this.sideLength, this.sideLength);
+        this.cellsTable = initializeGrid(this.sideLength, this.sideLength);
         this.status = "playing";      // 'playing' | 'won' | 'lost'
         this.flaggedCount = 0;
         this.bombsCount = 0;
@@ -58,6 +58,9 @@ class Grid {
 
     revealCell(i, j) {
         const currentCell = this.cellsTable[i][j];
+        if (currentCell.isFlagged || currentCell.isRevealed) {
+            return [];
+        }
         if (currentCell.isBomb) {
             this.status = 'lost';
             return [];
@@ -101,7 +104,7 @@ class Grid {
 
     checkGameWin() {
         if (this.revealedCount == this.sideLength ** 2 - this.bombsCount) {
-            this.status = 'win';
+            this.status = 'won';
         }
     }
 
@@ -146,7 +149,7 @@ class GameView {
     }
 
     buildGrid(sideLength) {
-        this.cellsElements = initilizeGrid(sideLength, sideLength);
+        this.cellsElements = initializeGrid(sideLength, sideLength);
         const gridElement = document.createElement('div');
         gridElement.classList.add('grid');
         for (let i = 0; i < sideLength; i++) {
@@ -194,12 +197,12 @@ class GameView {
         this.rootElement.querySelector(".remaining-flags-count").textContent = stats.remainingFlagsCount;
     }
 
-
     renderCell(cellData) {
         const i = cellData.i;
         const j = cellData.j;
         const cellElement = this.cellsElements[i][j];
         if (cellData.isRevealed) {
+            cellElement.classList.add('revealed');
             if (cellData.isBomb) {
                 cellElement.textContent = "💣";
             }
@@ -260,7 +263,7 @@ class GameController {
     decideNextMove(updatedCells) {
         this.syncCellsWithView(updatedCells);
         this.syncStatsWithView();
-        if (this.gridModel.status === "win") {
+        if (this.gridModel.status === "won") {
             this.handleGameWin();
         }
         else if (this.gridModel.status === "lost") {
@@ -285,26 +288,32 @@ class GameController {
     }
 }
 
-const app = document.getElementById('app');
 
-let SIZE = 10;
-app.style.setProperty("--side", SIZE)
-function start() {
-    const grid = new Grid(SIZE);
-    const gameView = new GameView(app);
-    const gameController = new GameController(grid, gameView);
+
+class GameManager {
+
+    constructor(app) {
+        this.app = app;
+        this.restartButton = app.querySelector('.restart-button');
+        this.levelSelector = app.querySelector("select");
+        this.restartButton.onclick = () => { this.start(app) }
+        this.levelSelector.onchange = (e) => { this.setSize(e.target.value) }
+        this.setSize(10);
+        this.start();
+    }
+
+    setSize(size) {
+        this.size = size;
+    }
+    start(app) {
+        this.app.style.setProperty("--side", this.size);
+        const grid = new Grid(this.size);
+        const gameView = new GameView(this.app);
+        const gameController = new GameController(grid, gameView);
+    }
 }
 
-const restartButton = document.querySelector('.restart-button');
-const levelSelect = document.querySelector("select");
-levelSelect.addEventListener('change', (e) => {
-    SIZE = parseInt(e.target.value);
-    app.style.setProperty("--side", SIZE)
-    start();
-})
-restartButton.addEventListener("click", () => {
-    start();
-})
 
+const app = document.getElementById('app');
 
-start();
+new GameManager(app);

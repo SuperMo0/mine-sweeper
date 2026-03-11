@@ -3,29 +3,72 @@
     padding: 0;
     box-sizing: border-box;
 }
+:root{
+    color: aliceblue;
+    --dark:#061E29;
+    --blue:#1D546D;
+    --cyan: #5F9598;
+    --white:#F3F4F4;
+    font-size: 1.5rem;
+}
+body{
+    height: 100dvh;
+}
 
 #app{
-    background-color: rgb(44, 41, 41);
-    padding: 1rem;
-    --size:40px;
-    --side:5;
+    margin-inline: auto;
     font-size: 1rem;
+    max-width: 500px;
+    height: 500px;    /*I want to maintain this to be always the same as the current width*/
+    display: flex;
+    flex-direction: column;
+}
+.stats{
+    display: flex;
+}
+
+
+
+.menu
+{
+    display: flex;
+    justify-content: space-around;
+    padding: 8px;
+    background-color: var(--dark);
+}
+
+.grid-container{
+    flex: 1;
+    position: relative;
+}
+
+.overlay{
+    position: absolute;
+    background-color: #1D546D;
+    position-anchor: ".grid-container";
+    width: 100%;
+    height: 100%;
+    opacity: 0.8;
+}
+
+*[hidden]{
+    display: none;
 }
 
 .grid
 {
-    border: 1px solid gray;
+    height: 100%;
+    border: 1px solid var(--blue);
     display: grid;
-    grid-template-columns: repeat(var(--side),var(--size));
-    grid-template-rows: repeat(var(--side),var(--size));
-    width: fit-content;
+    grid-template-columns: repeat(var(--side),1fr);
+    grid-template-rows: repeat(var(--side),1fr);
 }
 
 .cell
 {
     height: var(--size);
-    border: 1px solid black;
-    background-color: silver;
+    border: 1px solid var(--dark);
+    background-color: rgb(137, 194, 228);
     display: grid;
     place-content: center;
 }

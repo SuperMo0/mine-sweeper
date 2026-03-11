@@ -10,7 +10,30 @@
 </head>
 
 <div id="app">
+    <div class="menu">
+        <select name="level" id="level">
+            <option value="0">Easy</option>
+            <option value="0">Medium</option>
+            <option value="0">Hard</option>
+        </select>
+        <div class="stats">
+            🚩
+            <p class="remaining-flags-count">20</p>
+        </div>
+    </div>
+    <div class="grid-container">
+        <div hidden class="overlay">
+            <div hidden class="win-alert">
+                <p class="message">Congrats you won the game</p>
+                <button>Restart</button>
+            </div>
+            <div hidden class="lose-alert">
+                <p class="message">mmm maybe try again ? </p>
+                <button>Restart</button>
+            </div>
+        </div>
 
+    </div>
 </div>
 
 

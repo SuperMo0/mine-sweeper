@@ -106,25 +106,31 @@ class Grid {
     }
 
     floodFill(i, j, updatedCells) {
+
+        if (i < 0 || i >= this.sideLength || j < 0 || j >= this.sideLength) {
+            return;
+        }
         const currentCell = this.cellsTable[i][j];
         if (currentCell.isRevealed) {
             return;
         }
-        if (i < 0 || i >= this.sideLength || j < 0 || j >= this.sideLength) {
-            return;
-        }
-        const neighboringBombs = this.countSurroundingsBombs(i, j);
+        currentCell.neighborBombs = this.countSurroundingsBombs(i, j);
         currentCell.reveal();
         updatedCells.push(currentCell);
-        if (neighboringBombs != 0) {
+        if (currentCell.neighborBombs != 0) {
             return;
         }
         for (let di = -1; di <= 1; di++) {
             for (let dj = -1; dj <= 1; dj++) {
-                nextI = i + di;
-                nextJ = j + dj;
+                const nextI = i + di;
+                const nextJ = j + dj;
                 this.floodFill(nextI, nextJ, updatedCells);
             }
+        }
+    }
+    getStats() {
+        return {
+            remainingFlagsCount: this.bombsCount - this.flaggedCount
         }
     }
 }
@@ -154,7 +160,7 @@ class GameView {
             }
         }
         this.gridElement = gridElement;
-        this.rootElement.appendChild(gridElement);
+        this.rootElement.querySelector('.grid-container').appendChild(gridElement);
     }
 
     onCellLeftClick(callback) {
@@ -180,6 +186,11 @@ class GameView {
             this.renderCell(cell);
         }
     }
+
+    renderStats(stats) {
+        this.rootElement.querySelector(".remaining-flags-count").textContent = stats.remainingFlagsCount;
+    }
+
 
     renderCell(cellData) {
         const i = cellData.i;
@@ -218,6 +229,8 @@ class GameController {
 
         this.view.onCellLeftClick(this.handleReveal.bind(this));
         this.view.onCellRightClick(this.handleToggleflag.bind(this));
+        this.syncStatsWithView();
+
     }
 
     handleReveal(i, j) {
@@ -232,19 +245,20 @@ class GameController {
         this.decideNextMove(updatedCells);
     }
 
-    checkGameStatus() {
-        return this.gridModel.status;
-    }
     decideNextMove(updatedCells) {
-        if (this.checkGameStatus() === "win") {
+        if (this.gridModel.status === "win") {
             this.handleGameWin();
-        } else if (this.checkGameStatus === "lost") {
+        } else if (this.gridModel.status === "lost") {
             this.handleGameLost();
         } else {
             this.syncCellsWithView(updatedCells);
         }
+        this.syncStatsWithView();
     }
 
+    syncStatsWithView() {
+        this.view.renderStats(this.gridModel.getStats());
+    }
     handleGameLost() {
         const bombsPositions = this.gridModel.getBombsPositions();
         this.view.playBombRevealAnimation(bombsPositions);

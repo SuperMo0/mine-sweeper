@@ -3,6 +3,9 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function initilizeGrid(width, height) {
+    return new Array(width).fill(null).map(el => new Array(height).fill(null));
+}
 class Cell {
     constructor(isBomb, i, j) {
         this.i = i;
@@ -25,14 +28,14 @@ class Cell {
     }
 }
 
-
 class Grid {
     constructor(sideLength) {
         this.sideLength = sideLength || 10;
-        this.cellsTable = new Array(this.sideLength).fill(null).map(el => new Array(this.sideLength).fill(null));
+        this.cellsTable = initilizeGrid(this.sideLength, this.sideLength);
         this.status = "playing";      // 'playing' | 'won' | 'lost'
-        this.flaggedCorrectlyCount = 0;
+        this.flaggedCount = 0;
         this.bombsCount = 0;
+        this.revealedCount = 0;
         this.initiateGrid();
     }
     initiateGrid() {
@@ -46,25 +49,24 @@ class Grid {
         }
     }
 
-    getCellData(i, j) {
-        return this.cellsTable[i][j];
-    }
-
     toggleFlagCell(i, j) {
         const currentCell = this.cellsTable[i][j];
         currentCell.toggleFlag();
-        this.#updateFlaggedData(currentCell);
-        this.#checkGameWin();
+        currentCell.isFlagged ? this.flaggedCount += 1 : this.flaggedCount -= 1;
+        return [currentCell];
     }
 
     revealCell(i, j) {
         const currentCell = this.cellsTable[i][j];
         if (currentCell.isBomb) {
             this.status = 'lost';
-            return;
+            return [];
         }
-        currentCell.neighborBombs = this.#countSurroundingsBombs(i, j);
-        currentCell.reveal();
+        const updatedCells = [];
+        this.floodFill(i, j, updatedCells);
+        this.revealedCount += updatedCells.length;
+        this.checkGameWin();
+        return updatedCells;
     }
 
     getBombsPositions() {
@@ -79,7 +81,7 @@ class Grid {
         return cells;
     }
 
-    #countSurroundingsBombs(i, j) {
+    countSurroundingsBombs(i, j) {
         let count = 0;
         let nextI, nextJ;
         for (let di = -1; di <= 1; di++) {
@@ -97,21 +99,34 @@ class Grid {
         return count;
     }
 
-    #updateFlaggedData(cell) {
-        if (cell.isFlagged && cell.isBomb) {
-            this.flaggedCorrectlyCount += 1;
-        } else if (!cell.isFlagged && cell.isBomb) {
-            this.flaggedCorrectlyCount -= 1;
-        }
-    }
-
-    #checkGameWin() {
-        if (this.bombsCount == this.flaggedCorrectlyCount) {
+    checkGameWin() {
+        if (this.revealedCount == this.sideLength ** 2 - this.bombsCount) {
             this.status = 'win';
         }
     }
 
-
+    floodFill(i, j, updatedCells) {
+        const currentCell = this.cellsTable[i][j];
+        if (currentCell.isRevealed) {
+            return;
+        }
+        if (i < 0 || i >= this.sideLength || j < 0 || j >= this.sideLength) {
+            return;
+        }
+        const neighboringBombs = this.countSurroundingsBombs(i, j);
+        currentCell.reveal();
+        updatedCells.push(currentCell);
+        if (neighboringBombs != 0) {
+            return;
+        }
+        for (let di = -1; di <= 1; di++) {
+            for (let dj = -1; dj <= 1; dj++) {
+                nextI = i + di;
+                nextJ = j + dj;
+                this.floodFill(nextI, nextJ, updatedCells);
+            }
+        }
+    }
 }
 
 class GameView {
@@ -125,7 +140,7 @@ class GameView {
     }
 
     buildGrid(sideLength) {
-        this.cellsElements = new Array(sideLength).fill(null).map(el => new Array(sideLength).fill(null))
+        this.cellsElements = initilizeGrid(sideLength, sideLength);
         const gridElement = document.createElement('div');
         gridElement.classList.add('grid');
         for (let i = 0; i < sideLength; i++) {
@@ -160,6 +175,12 @@ class GameView {
             callback(i, j);
         })
     }
+    renderCells(updatedCells) {
+        for (const cell of updatedCells) {
+            this.renderCell(cell);
+        }
+    }
+
     renderCell(cellData) {
         const i = cellData.i;
         const j = cellData.j;
@@ -188,8 +209,6 @@ class GameView {
     }
 }
 
-
-
 class GameController {
     constructor(gridModel, view) {
         this.gridModel = gridModel;
@@ -201,34 +220,41 @@ class GameController {
         this.view.onCellRightClick(this.handleToggleflag.bind(this));
     }
 
-    checkGameStatus() {
-        if (this.gridModel.status == "lost") {
-            const bombsPositions = this.gridModel.getBombsPositions();
-            this.view.playBombRevealAnimation(bombsPositions);
-        }
-        else if (this.gridModel.status == "win") {
-            alert('Win');
-        }
-
-    }
-
     handleReveal(i, j) {
         if (this.gridModel.status != "playing") return;
-        this.gridModel.revealCell(i, j);
-        this.syncCellWithView(i, j);
-        this.checkGameStatus();
+        const updatedCells = this.gridModel.revealCell(i, j);
+        this.decideNextMove(updatedCells);
     }
 
     handleToggleflag(i, j) {
         if (this.gridModel.status != "playing") return;
-        this.gridModel.toggleFlagCell(i, j);
-        this.syncCellWithView(i, j);
-        this.checkGameStatus();
+        const updatedCells = this.gridModel.toggleFlagCell(i, j);
+        this.decideNextMove(updatedCells);
     }
 
-    syncCellWithView(i, j) {
-        const cellData = this.gridModel.getCellData(i, j);
-        this.view.renderCell(cellData);
+    checkGameStatus() {
+        return this.gridModel.status;
+    }
+    decideNextMove(updatedCells) {
+        if (this.checkGameStatus() === "win") {
+            this.handleGameWin();
+        } else if (this.checkGameStatus === "lost") {
+            this.handleGameLost();
+        } else {
+            this.syncCellsWithView(updatedCells);
+        }
+    }
+
+    handleGameLost() {
+        const bombsPositions = this.gridModel.getBombsPositions();
+        this.view.playBombRevealAnimation(bombsPositions);
+    }
+    handleGameWin() {
+        alert("Congrats you won");
+    }
+
+    syncCellsWithView(updatedCells) {
+        this.view.renderCells(updatedCells);
     }
 }
 

@@ -160,7 +160,10 @@ class GameView {
             }
         }
         this.gridElement = gridElement;
-        this.rootElement.querySelector('.grid-container').appendChild(gridElement);
+        const gridContainerElement = this.rootElement.querySelector('.grid-container');
+        gridContainerElement.replaceChildren();
+        gridContainerElement.appendChild(gridElement);
+        this.rootElement.setAttribute('game-status', "playing");
     }
 
     onCellLeftClick(callback) {
@@ -218,6 +221,15 @@ class GameView {
             await sleep(100);
         }
     }
+    updateGameStatus(status) {
+        const message = this.rootElement.querySelector('.message');
+        if (status == "won") {
+            message.textContent = "Congrats you won 🥳";
+        } else {
+            message.textContent = "mmmm... maybe try again 🔁";
+        }
+        this.rootElement.setAttribute('game-status', status);
+    }
 }
 
 class GameController {
@@ -246,25 +258,26 @@ class GameController {
     }
 
     decideNextMove(updatedCells) {
+        this.syncCellsWithView(updatedCells);
+        this.syncStatsWithView();
         if (this.gridModel.status === "win") {
             this.handleGameWin();
-        } else if (this.gridModel.status === "lost") {
-            this.handleGameLost();
-        } else {
-            this.syncCellsWithView(updatedCells);
         }
-        this.syncStatsWithView();
+        else if (this.gridModel.status === "lost") {
+            this.handleGameLost();
+        }
     }
 
     syncStatsWithView() {
         this.view.renderStats(this.gridModel.getStats());
     }
-    handleGameLost() {
+    async handleGameLost() {
         const bombsPositions = this.gridModel.getBombsPositions();
-        this.view.playBombRevealAnimation(bombsPositions);
+        await this.view.playBombRevealAnimation(bombsPositions);
+        this.view.updateGameStatus('lost');
     }
     handleGameWin() {
-        alert("Congrats you won");
+        this.view.updateGameStatus('won');
     }
 
     syncCellsWithView(updatedCells) {
@@ -274,9 +287,24 @@ class GameController {
 
 const app = document.getElementById('app');
 
-const SIZE = 10;
-
+let SIZE = 10;
 app.style.setProperty("--side", SIZE)
-const grid = new Grid(SIZE);
-const gameView = new GameView(app);
-const gameController = new GameController(grid, gameView);
+function start() {
+    const grid = new Grid(SIZE);
+    const gameView = new GameView(app);
+    const gameController = new GameController(grid, gameView);
+}
+
+const restartButton = document.querySelector('.restart-button');
+const levelSelect = document.querySelector("select");
+levelSelect.addEventListener('change', (e) => {
+    SIZE = parseInt(e.target.value);
+    app.style.setProperty("--side", SIZE)
+    start();
+})
+restartButton.addEventListener("click", () => {
+    start();
+})
+
+
+start();

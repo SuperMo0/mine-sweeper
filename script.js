@@ -171,22 +171,33 @@ class GameView {
     }
 
     onCellLeftClick(callback) {
-        this.gridElement.addEventListener("click", (e) => {
-            if (!e.target.classList.contains('cell')) return;
-            const i = parseInt(e.target.dataset.i);
-            const j = parseInt(e.target.dataset.j);
-            callback(i, j);
-        })
+        this.gridElement.addEventListener("click", (e) => { this.delegateToController(e, callback) })
     }
 
+    delegateToController(e, callback) {
+        if (!e.target.classList.contains('cell')) return;
+        const i = parseInt(e.target.dataset.i);
+        const j = parseInt(e.target.dataset.j);
+        callback(i, j);
+    }
     onCellRightClick(callback) {
-        this.gridElement.addEventListener("contextmenu", (e) => {
-            e.preventDefault();
-            if (!e.target.classList.contains('cell')) return;
-            const i = parseInt(e.target.dataset.i);
-            const j = parseInt(e.target.dataset.j);
-            callback(i, j);
+        this.gridElement.addEventListener("contextmenu", (e) => { e.preventDefault(); this.delegateToController(e, callback) })
+        this.gridElement.addEventListener("pointerdown", (e) => {
+            let isActive = true;
+            setTimeout(() => {
+                if (isActive) {
+                    e.preventDefault();
+                    this.delegateToController(e, callback);
+                }
+            }, 1000)
+            this.gridElement.addEventListener("pointerup", () => {
+                console.log('here');
+
+                isActive = false;
+            })
+
         })
+
     }
     renderCells(updatedCells) {
         for (const cell of updatedCells) {

@@ -3,8 +3,9 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function initializeGrid(width, height) {
-    return new Array(width).fill(null).map(el => new Array(height).fill(null));
+function initializeGrid(height, width) {
+    let z = new Array(height).fill(null).map(el => new Array(width).fill(null));
+    return z;
 }
 class Cell {
     constructor(isBomb, i, j) {
@@ -30,7 +31,7 @@ class Cell {
 
 class Grid {
     constructor(sideLength) {
-        this.sideLength = sideLength || 10;
+        this.sideLength = sideLength;
         this.cellsTable = initializeGrid(this.sideLength, this.sideLength);
         this.status = "playing";      // 'playing' | 'won' | 'lost'
         this.flaggedCount = 0;
@@ -41,7 +42,7 @@ class Grid {
     initiateGrid() {
         for (let i = 0; i < this.sideLength; i++) {
             for (let j = 0; j < this.sideLength; j++) {
-                const isBomb = Math.random() < 0.1;
+                const isBomb = Math.random() < 0.1;   // todo: we should fix the number of bombs for each level
                 const crntCell = new Cell(isBomb, i, j);
                 this.bombsCount += isBomb;
                 this.cellsTable[i][j] = crntCell;
@@ -296,16 +297,17 @@ class GameManager {
         this.app = app;
         this.restartButton = app.querySelector('.restart-button');
         this.levelSelector = app.querySelector("select");
-        this.restartButton.onclick = () => { this.start(app) }
-        this.levelSelector.onchange = (e) => { this.setSize(e.target.value) }
+        this.restartButton.onclick = () => { this.start() }
+        this.levelSelector.onchange = (e) => { this.setSize(e.target.value); this.start() }
         this.setSize(10);
         this.start();
     }
 
     setSize(size) {
+        size = parseInt(size);
         this.size = size;
     }
-    start(app) {
+    start() {
         this.app.style.setProperty("--side", this.size);
         const grid = new Grid(this.size);
         const gameView = new GameView(this.app);

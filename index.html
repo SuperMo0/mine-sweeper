@@ -4,38 +4,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Minesweeper</title>
     <link rel="stylesheet" href="./style.css">
     <script src="./script.js" defer></script>
+    <script
+        src="https://unpkg.com/@lyket/widget@latest/dist/lyket.js?apiKey=pt_ff58ee8aa34826ba57d10ea7699e45"></script>
 </head>
 
-<div game-status="playing" id="app">
-    <div class="menu">
-        <select name="level" id="level">
-            <option value="10">Easy</option>
-            <option value="12">Medium</option>
-            <option value="15">Hard</option>
-        </select>
-        <div class="stats">
-            🚩
-            <p class="remaining-flags-count"></p>
+<body>
+    <h1 class="author-title">made with 💗 by Mowafak</h1>
+
+    <div class="like-section">
+        <p class="like-text">Enjoying the game?</p>
+        <div class="clap" data-lyket-type="clap" data-lyket-id="minesweeper-game" data-lyket-namespace="my-portfolio"
+            data-lyket-color-primary="#ff6b81" data-lyket-color-secondary="#1D546D"
+            data-lyket-color-background="rgba(255, 107, 129, 0.1)" data-lyket-color-text="#F3F4F4"
+            data-lyket-color-icon="#5F9598" data-lyket-color-highlight="#ff9eb0"
+            data-lyket-font-family="system-ui, sans-serif">
         </div>
     </div>
-    <div class="main">
-        <div class="overlay">
-            <div class="popup">
-                <p class="message">.......</p>
-                <button class="restart-button">Restart</button>
+
+    <div game-status="playing" id="app">
+        <div class="menu">
+            <select name="level" id="level">
+                <option value="10">Easy</option>
+                <option value="12">Medium</option>
+                <option value="15">Hard</option>
+            </select>
+            <div class="stats">
+                🚩 <p class="remaining-flags-count"></p>
             </div>
         </div>
-        <div class="grid-container">
+        <div class="main">
+            <div class="overlay">
+                <div class="popup">
+                    <p class="message">.......</p>
+                    <button class="restart-button">Restart</button>
+                </div>
+            </div>
+            <div class="grid-container"></div>
         </div>
     </div>
-</div>
-
-
-<body>
-
 </body>
 
 </html>
